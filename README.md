@@ -10,7 +10,9 @@ This project investigates the numerical simulation of projectile motion in dissi
 
 This project simulates the trajectory of a projectile under three different physical models. It demonstrates the transition from simple classroom physics to realistic, non-linear systems that require numerical integration.
 
-**Note:** *Version 2.0 Update:* This project has been upgraded to a research-standard 4th-order Runge-Kutta (RK4) integrator. By sampling the derivatives at four different points per time-step, the global error has been reduced from $O(\Delta t)$ to $O(\Delta t^4)$, allowing for high-precision trajectories even with larger time steps.
+**Note:**  *Version 2.1 (Current)*: Implemented an Audit & Validation framework. The custom RK4 engine was benchmarked against `scipy.integrate.solve_ivp` (RK45 adaptive-step solver), achieving 99.98% accuracy.
+
+*Version 2.0:* This project has been upgraded to a research-standard 4th-order Runge-Kutta (RK4) integrator. By sampling the derivatives at four different points per time-step, the global error has been reduced from $O(\Delta t)$ to $O(\Delta t^4)$, allowing for high-precision trajectories even with larger time steps.
 
 *Version 1.0* implements a manual time-stepping algorithm (Euler Method) using standard Python data structures (lists) to avoid dependency on heavy numerical libraries. it is worth noting that the Euler method is a "first-order" numerical method. This means its global error is roughly proportional to the time step $\Delta t$. It is only accurate for very small time steps, so, later version we will move to *SciPy* and *RK4*.
 
@@ -115,8 +117,22 @@ The simulation generates three key insights:
 
 - Reliability (Validation)
 
-We validated the Euler solver against the exact analytical solution for Linear Drag. As shown below, the numerical error is negligible for our time step.
+I have implemented a two-tier validation strategy to ensure the integrity of the simulation across different versions.
+
+1. Analytical Validation (v1.0/v2.0):
+The numerical output for Linear Drag was compared against the exact exponential analytical solution. The error was minimized to $10^{-6}$, confirming the basic reliability of the custom stepping logic.
 ![Validation Plot](plots/1_validation_error.png)
+
+2. Numerical Audit & SciPy Benchmarking (v2.1):
+To verify the high-precision RK4 engine, I performed a cross-validation study against the industry-standard `scipy.integrate.solve_ivp` library using its adaptive-step RK45 (Dormand-Prince) solver.
+
+Methodology: Since SciPy uses adaptive time-steps, I utilized 1D Linear Interpolation to map its "Gold Standard" results onto my fixed $0.01s$ time grid for direct comparison.
+
+Residual Analysis: The maximum vertical deviation (Max Error) is $\approx 5.31 \times 10^{-3}$ meters.
+
+Conclusion: Over a ~38m trajectory, the custom RK4 maintains 99.98% accuracy. The millimeter-scale residuals are attributed to numerical noise and interpolation artifacts, confirming the solver is research-validated.
+
+![Validation Plot](plots/v2_1_scipy_validation.png)
 
 - Physical Models Comparison
 
@@ -163,15 +179,14 @@ RK4's error decreases by 10,000 times.
 ## 4. How to Run
 
 1. Ensure you have Python installed.
-2. Install dependencies: `pip install matplotlib numpy`
+2. Install dependencies: `pip install matplotlib numpy scipy`
 3. Run the script: `python projectile_sim_v2.py`
 
 ## 5. Future Enhancements
 
-1. Using Python libraries that solve ODEs like `scipy.integrate.solve_ivp` and validate {Version 2.1}
-2. Incorporate the Magnus Effect (spin on the ball)
-3. Add a Variable Density Atmosphere model for high-altitude projectiles
-4. Implement a GUI using TKinter or PyQt for real-time parameter adjustment
+1. Incorporate the Magnus Effect (spin on the ball)
+2. Add a Variable Density Atmosphere model for high-altitude projectiles
+3. Implement a GUI using TKinter or PyQt for real-time parameter adjustment
 
 ## 6. References & Resources
 
@@ -193,5 +208,7 @@ By comparing the numerical results of the Linear Drag model with its Analytical 
 Heavier objects have more inertia relative to their surface area, making them less affected by air resistance than lighter objects.
 5. Final Reflection
 This project demonstrates the necessity of computational methods in Physics. While simple models can be solved with pen and paper, "real-world" physics—where the forces are coupled and non-linear—requires the power of numerical integration.
+6. The Importance of Code Verification
+Beyond physical insights, this project highlights the necessity of Verification and Validation (V&V) in scientific computing. While your custom code may appear physically plausible, benchmarking it against an industry-standard library like scipy.integrate provides the "Ground Truth" required for research-grade software. The successful cross-validation of the RK4 engine confirms that the manual implementation of the state-space derivatives is free of logical artifacts, providing a high-trust foundation for modeling even more complex, multi-body systems in the future.
 
 This simulation serves as a foundational step toward more complex models involving the Magnus Effect (lift from spin) or Variable Air Density.

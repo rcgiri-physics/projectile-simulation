@@ -3,3 +3,6 @@ matplotlib==3.8.2
 
 # Numerical computations
 numpy==2.3.0    
+
+# Scientific computing and optimization
+scipy==1.14.0
