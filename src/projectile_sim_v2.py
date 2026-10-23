@@ -100,7 +100,9 @@ class ProjectileV2:
         --------
         trajectory : ndarray, shape (N, 4)
             Compiled state array documenting localized position and velocity
-            vectors over time.
+            vectors over time. The last row is the landing point (y = 0),
+            interpolated linearly between the last two steps, so it falls
+            between grid times rather than on the dt grid.
         """
         rad = np.radians(angle)
         z = np.array([0.0, 0.0, initial_velocity * np.cos(rad), initial_velocity * np.sin(rad)])
@@ -123,10 +125,10 @@ class ProjectileV2:
             if z[1] >= 0:
                 trajectory.append(z.copy())
             else:
-                fraction = -z[1] / (trajectory[-1][3] if len(trajectory) > 0 else 1.0)
-                if int(fraction) != 0:
-                    z_final = z + fraction * self._state_derivative(z, mode) * dt
-                    trajectory.append(z_final)
+                # Linear interpolation to y = 0 between the last point above ground and this one.
+                z_prev = trajectory[-1]
+                fraction = z_prev[1] / (z_prev[1] - z[1])
+                trajectory.append(z_prev + fraction * (z - z_prev))
                 break
 
         return np.array(trajectory)
